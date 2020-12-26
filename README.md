@@ -1,6 +1,8 @@
 # RayTracing
 本节增加的功能：opencv实现渲染时预览窗口
 
+*下载完成后将选中opencv.part0X.rar中的任意一个，解压到当前文件夹即可使用
+
 /*
   * 作者（B站UP主，感谢三连！！！）：FaithBook-_-
   * GitHub：FaithBook233
