@@ -56,7 +56,7 @@ int main()
 		WindowHeight = (int)((double)WindowWidth * (double)ny / (double)nx);
 
 	}
-	Mat lena(ny, nx, CV_8UC3, Scalar(50, 50, 50)); //创建一张图片
+	Mat RenderingImage(ny, nx, CV_8UC3, Scalar(50, 50, 50)); //创建一张图片
 	namedWindow("图像预览（渲染中）", WINDOW_NORMAL);//设置标题
 	moveWindow("图像预览（渲染中）", (int)((1920.0 - WindowWidth) / 2), (int)((1080.0 - WindowHeight) / 2) - 50);//设置窗口位置
 	resizeWindow("图像预览（渲染中）", WindowWidth, WindowHeight);//设置窗口大小
@@ -78,19 +78,19 @@ int main()
 			//将当前像素的三个通道值写入文件
 			std::cout << ir << " " << ig << " " << ib << std::endl;
 
-			lena.at<cv::Vec3b>(ny - 1 - j, i)[0] = ib;
-			lena.at<cv::Vec3b>(ny - 1 - j, i)[1] = ig;
-			lena.at<cv::Vec3b>(ny - 1 - j, i)[2] = ir;
+			RenderingImage.at<cv::Vec3b>(ny - 1 - j, i)[0] = ib;
+			RenderingImage.at<cv::Vec3b>(ny - 1 - j, i)[1] = ig;
+			RenderingImage.at<cv::Vec3b>(ny - 1 - j, i)[2] = ir;
 		}
 		//每行计算完以后刷新预览窗口
 		if (!(j%(ny/100))) //每渲染ny/100行后更新预览窗口图片
 		{
-			imshow("图像预览（渲染中）", lena);
+			imshow("图像预览（渲染中）", RenderingImage);
 			waitKey(1);//等待1毫秒事件让窗口刷新完毕
 		}
 		
 	}
-	imshow("图像预览（渲染中）", lena);
+	imshow("图像预览（渲染中）", RenderingImage);
 	waitKey(3000); //等待3000毫秒
 	destroyAllWindows();//关闭窗口
 	return 0;
