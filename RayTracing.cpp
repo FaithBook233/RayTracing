@@ -32,8 +32,8 @@ using namespace std;
 using namespace cv;
 int main()
 {
-	int nx = 200;//图片宽度（单位为像素）
-	int ny = 100;//图片宽度（单位为像素）
+	int nx = 800;//图片宽度（单位为像素）
+	int ny = 400;//图片宽度（单位为像素）
 
 	//文件头写入
 	std::cout << "P3" << std::endl << nx << " " << ny << std::endl << "255" << std::endl;
@@ -74,9 +74,10 @@ int main()
 			//将当前像素的三个通道值写入文件
 			std::cout << ir << " " << ig << " " << ib << std::endl;
 
-			RenderingImage.at<cv::Vec3b>(ny - 1 - j, i)[0] = ib;
-			RenderingImage.at<cv::Vec3b>(ny - 1 - j, i)[1] = ig;
-			RenderingImage.at<cv::Vec3b>(ny - 1 - j, i)[2] = ir;
+			//RenderingImage中的元素顺序为 蓝、绿、红
+			RenderingImage.at<cv::Vec3b>(ny - 1 - j, i)[0] = ib; //蓝通道
+			RenderingImage.at<cv::Vec3b>(ny - 1 - j, i)[1] = ig; //绿通道
+			RenderingImage.at<cv::Vec3b>(ny - 1 - j, i)[2] = ir; //红通道
 		}
 		//每行计算完以后刷新预览窗口
 		if (!(j%(ny/100))) //每渲染ny/100行后更新预览窗口图片
