@@ -83,7 +83,15 @@ int main()
 			lena.at<cv::Vec3b>(ny - 1 - j, i)[2] = ir;
 		}
 		//每行计算完以后刷新预览窗口
-		imshow("图像预览（渲染中）", lena);
-		waitKey(1);
+		if (!(j%(ny/100))) //每渲染ny/100行后更新预览窗口图片
+		{
+			imshow("图像预览（渲染中）", lena);
+			waitKey(1);//等待1毫秒事件让窗口刷新完毕
+		}
+		
 	}
+	imshow("图像预览（渲染中）", lena);
+	waitKey(3000); //等待3000毫秒
+	destroyAllWindows();//关闭窗口
+	return 0;
 }
