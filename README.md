@@ -1,6 +1,9 @@
 # RayTracing
 每章的代码都会存到不同的分支里，注意看哦~~~
 
+代码注释和详解可见我的B站专栏文集《一周实现光线追踪》
+链接：https://www.bilibili.com/read/readlist/rl355867
+
 /*
   * 作者（B站UP主，感谢三连！！！）：FaithBook-_-
   * GitHub：FaithBook233
