@@ -85,10 +85,11 @@ int main()
 
 	//保存世界中的球体
 	Hitable* List[4];
-	List[0] = new Sphere(Vec3(0, 0, -1), 0.5, new Lambertian(Vec3(0.8, 0.3, 0.3))); //中间的球
-	List[1] = new Sphere(Vec3(0, -100.5, -1), 100, new Lambertian(Vec3(1.0, 0.0, 0.0)));//下面
-	List[2] = new Sphere(Vec3(1, 0, -1), 0.5, new Metal(Vec3(0.8, 0.6, 0.2)));//右边
-	List[3] = new Sphere(Vec3(-1, 0, -1), 0.5, new Metal(Vec3(0.8, 0.8, 0.8)));//右边
+	List[0] = new Sphere(Vec3(0, 0, -1), 0.5, new Lambertian(Vec3(0.1, 0.2, 0.5))); //中间的球
+	List[1] = new Sphere(Vec3(0, -100.5, -1), 100, new Lambertian(Vec3(0.8, 0.8, 0.0)));//下面
+	List[2] = new Sphere(Vec3(1, 0, -1), 0.5, new Metal(Vec3(0.8, 0.6, 0.2), 0.5));//右边
+	List[3] = new Sphere(Vec3(-1, 0, -1), 0.5, new Dielectric(1.5)); //左边
+	List[3] = new Sphere(Vec3(-1, 0, -1), -0.45, new Dielectric(1.5)); //负半径，曲面法线指向内部
 	Hitable* World = new HitableList(List, 4);
 
 	Camera Cam;//摄像机对象
