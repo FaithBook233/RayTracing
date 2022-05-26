@@ -1,0 +1,10 @@
+#自定义忽略
+.vs
+*.ppm
+x64
+Debug
+
+#这些在压缩包里，直接解压压缩包即可
+opencv
+opencv_world451d.lib
+opencv_world451d.dll
