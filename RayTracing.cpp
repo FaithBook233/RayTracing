@@ -37,13 +37,24 @@
 
 using namespace cv;
 
+bool HitSphere(const Vec3& Center, double Radius, const Ray& R)
+{
+	Vec3 OC = R.Origin() - Center; //从圆心到射线R起始点的向量
+	double A = Dot(R.Direction(), R.Direction());
+	double B = 2.0 * Dot(OC, R.Direction());
+	double C = Dot(OC, OC) - Radius * Radius;
+	double Discriminant = B * B - 4 * A * C;	   //这个变量用于记录射线R与球体的交点数量
+	return (Discriminant > 0);
+}
+
 Vec3 Color(const Ray& R)
 {
+	if (HitSphere(Vec3(0, 0, -1), 0.5, R))
+		return Vec3(1, 0, 0);//返回红色
 	Vec3 UnitDirection = UnitVector(R.Direction());		 //获取单位方向向量
 	double T = 0.5 * (UnitDirection.Y() + 1.0);			 //插值量，范围[0,1]
 	return (1.0 - T) * Vec3(1.0, 1.0, 1.0) + T * Vec3(0.5, 0.7, 1.0); //返回一个颜色
 }
-
 int main()
 {
 	int nx = 200;//图片宽度（单位为像素）
