@@ -41,6 +41,21 @@
 
 using namespace cv;
 
+//获取一个随机地方向向量
+Vec3 RandomInUnitSphere()
+{
+	Vec3 P;
+	do
+	{
+		//这里应该注意的是
+		//RandonDbl返回0-1的浮点
+		//乘2再减去（1,1,1）得到P后，三个通道地值（-1,1）之间
+		//也就是得到一个从入射点P出发的一个随机光线。
+		P = 2.0 * Vec3(RandDbl01(), RandDbl01(), RandDbl01()) - Vec3(1, 1, 1);
+	} while (P.SquaredLength() >= 1.0);	 //点在求体外则继续产生随机书
+	return P;
+}
+
 double HitSphere(const Vec3& Center, double Radius, const Ray& R)
 {
 	Vec3 OC = R.Origin() - Center; //从圆心到射线R起始点的向量
@@ -64,8 +79,14 @@ Vec3 Color(const Ray& R, Hitable* World)
 
 	if (World->Hit(R, 0.0, DBL_MAX, Rec))	 //如果能检测到这个World对象
 	{
-		//返回法线贴图
-		return 0.5 * Vec3(Rec.Normal.X() + 1, Rec.Normal.Y() + 1, Rec.Normal.Z() + 1);
+		//入射点法线周围一定范围内的额随机射线
+		Vec3 Target = Rec.P + Rec.Normal + RandomInUnitSphere();
+		//如果顺着光线一直能碰撞到物体
+		//则从当前入射点的法线周围一定的随机范围内发射新光线
+		//继续监测下一个命中物体的颜色
+		//递归地进行，直到没有命中任何物体
+		//下面加了个0.5的系数，可
+		return 0.5 * Color(Ray(Rec.P, Target - Rec.P), World);
 	}
 	else
 	{
