@@ -21,5 +21,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="D:\FaithFile-_-\Desktop\ray-tracing\.gitignore" />
+    <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Include\Vec3.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
