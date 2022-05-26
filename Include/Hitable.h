@@ -1,11 +1,14 @@
 #pragma once
 
 #include "Ray.h"
+
+class Material;
 struct HitRecord   //命中结果
 {
 	double T;		//入射点解出来的T
 	Vec3 P;			//入射点
 	Vec3 Normal;	//法线
+	Material* MatPtr;
 };
 
 class Hitable

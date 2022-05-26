@@ -41,55 +41,34 @@
 
 using namespace cv;
 
-//获取一个随机地方向向量
-Vec3 RandomInUnitSphere()
-{
-	Vec3 P;
-	do
-	{
-		//这里应该注意的是
-		//RandonDbl返回0-1的浮点
-		//乘2再减去（1,1,1）得到P后，三个通道地值（-1,1）之间
-		//也就是得到一个从入射点P出发的一个随机光线。
-		P = 2.0 * Vec3(RandDbl01(), RandDbl01(), RandDbl01()) - Vec3(1, 1, 1);
-	} while (P.SquaredLength() >= 1.0);	 //点在求体外则继续产生随机书
-	return P;
-}
 
-double HitSphere(const Vec3& Center, double Radius, const Ray& R)
+Vec3 Color(const Ray& R, Hitable* World, int Depth)
 {
-	Vec3 OC = R.Origin() - Center; //从圆心到射线R起始点的向量
-	double A = Dot(R.Direction(), R.Direction());
-	double B = 2.0 * Dot(OC, R.Direction());
-	double C = Dot(OC, OC) - Radius * Radius;
-	double Discriminant = B * B - 4 * A * C;	   //这个变量用于记录射线R与球体的交点数量
-	if (Discriminant < 0)
+	HitRecord Rec;///命中结果
+
+
+	if (World->Hit(R, 0.001, DBL_MAX, Rec))	 //如果能检测到这个World对象
 	{
-		return -1;	//如果无解返回负一
+		Ray Scattered;	//散射光线
+		Vec3 Attenuation;//衰减
+		 //保证执行color的次数不超过50次,
+		//查看Scatter函数，Attenuation 与Scattered传引用进去，函数执行完
+		//这两个变量得到命中对象的衰减率（Attenuation）和散射光线（或反射光线Scattered）
+		if (Depth < 50 && Rec.MatPtr->Scatter(R, Rec, Attenuation, Scattered))
+		{
+			//下面递归地运行，检测从散射光线Scattered检测到的颜色
+			//每次调用都加了衰减参数Attenuation
+			//每次都从新的散射光线开始检测。
+			return  Attenuation * Color(Scattered, World, Depth + 1);
+		}
+		else
+		{
+			return Vec3(0, 0, 0);
+		}
 	}
 	else
 	{
-		return (-B - sqrt(Discriminant)) / (2.0 * A);  	//如果有解则返回小一点的解
-	}
-}
-
-Vec3 Color(const Ray& R, Hitable* World)
-{
-	HitRecord Rec;
-
-	if (World->Hit(R, 0.0, DBL_MAX, Rec))	 //如果能检测到这个World对象
-	{
-		//入射点法线周围一定范围内的额随机射线
-		Vec3 Target = Rec.P + Rec.Normal + RandomInUnitSphere();
-		//如果顺着光线一直能碰撞到物体
-		//则从当前入射点的法线周围一定的随机范围内发射新光线
-		//继续监测下一个命中物体的颜色
-		//递归地进行，直到没有命中任何物体
-		//下面加了个0.5的系数，可
-		return 0.5 * Color(Ray(Rec.P, Target - Rec.P), World);
-	}
-	else
-	{
+		//返回背景色
 		Vec3 UnitDirection = UnitVector(R.Direction());		 //获取单位方向向量
 		double T = 0.5 * (UnitDirection.Y() + 1.0);			 //插值量，范围[0,1]
 		return (1.0 - T) * Vec3(1.0, 1.0, 1.0) + T * Vec3(0.5, 0.7, 1.0); //返回一个颜色
@@ -98,17 +77,19 @@ Vec3 Color(const Ray& R, Hitable* World)
 
 int main()
 {
-	int nx = 200;//图片宽度（单位为像素）
-	int ny = 100;//图片高度（单位为像素）
+	int nx = 800;//图片宽度（单位为像素）
+	int ny = 400;//图片高度（单位为像素）
 	int ns = 100;//扫描次数
 	//文件头写入
 	std::cout << "P3" << std::endl << nx << " " << ny << std::endl << "255" << std::endl;
 
 	//保存世界中的球体
-	Hitable* List[2];
-	List[0] = new Sphere(Vec3(0, 0, -1), 0.5);
-	List[1] = new Sphere(Vec3(0, -100.5, -1), 100);
-	Hitable* World = new HitableList(List, 2);
+	Hitable* List[4];
+	List[0] = new Sphere(Vec3(0, 0, -1), 0.5, new Lambertian(Vec3(0.8, 0.3, 0.3))); //中间的球
+	List[1] = new Sphere(Vec3(0, -100.5, -1), 100, new Lambertian(Vec3(1.0, 0.0, 0.0)));//下面
+	List[2] = new Sphere(Vec3(1, 0, -1), 0.5, new Metal(Vec3(0.8, 0.6, 0.2)));//右边
+	List[3] = new Sphere(Vec3(-1, 0, -1), 0.5, new Metal(Vec3(0.8, 0.8, 0.8)));//右边
+	Hitable* World = new HitableList(List, 4);
 
 	Camera Cam;//摄像机对象
 
@@ -152,10 +133,12 @@ int main()
 				Vec3 P = R.PointAtParameter(2.0);
 
 				//将随机UV得到的颜色相加
-				Col += Color(R, World);
+				Col += Color(R, World, 0);
 			}
 			//计算Col的平均数
 			Col /= double(ns);
+			//将得到的颜色变亮
+			Col = Vec3(sqrt(Col[0]), sqrt(Col[1]), sqrt(Col[2]));
 			//下面三个将射线检测到的颜色拆分为红、绿、蓝三个通道
 			int ir = int(255.99 * Col[0]);
 			int ig = int(255.99 * Col[1]);

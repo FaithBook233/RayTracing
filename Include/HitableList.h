@@ -23,7 +23,7 @@ bool HitableList::Hit(const Ray& R, double TMin, double TMax, HitRecord& Rec)con
 
 	for (int i = 0; i < ListSize; i++)//遍历列表
 	{
-		if (List[i]->Hit(R, TMin, ClosestSoFar,TempRec))//如果当前的列表元素被射线R命中
+		if (List[i]->Hit(R, TMin, ClosestSoFar, TempRec))//如果当前的列表元素被射线R命中
 		{
 			HitAnything = true;	//将HitAnything设置为true，表示射线R命中了物体
 			ClosestSoFar = TempRec.T;
