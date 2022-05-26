@@ -34,27 +34,45 @@
 #include <highgui.hpp>
 #include "Vec3.h"
 #include "Ray.h"
+#include "Sphere.h"
+#include "HitableList.h"
 
 using namespace cv;
 
-bool HitSphere(const Vec3& Center, double Radius, const Ray& R)
+double HitSphere(const Vec3& Center, double Radius, const Ray& R)
 {
 	Vec3 OC = R.Origin() - Center; //从圆心到射线R起始点的向量
 	double A = Dot(R.Direction(), R.Direction());
 	double B = 2.0 * Dot(OC, R.Direction());
 	double C = Dot(OC, OC) - Radius * Radius;
 	double Discriminant = B * B - 4 * A * C;	   //这个变量用于记录射线R与球体的交点数量
-	return (Discriminant > 0);
+	if (Discriminant < 0)
+	{
+		return -1;	//如果无解返回负一
+	}
+	else
+	{
+		return (-B - sqrt(Discriminant)) / (2.0 * A);  	//如果有解则返回小一点的解
+	}
 }
 
-Vec3 Color(const Ray& R)
+Vec3 Color(const Ray& R, Hitable* World)
 {
-	if (HitSphere(Vec3(0, 0, -1), 0.5, R))
-		return Vec3(1, 0, 0);//返回红色
-	Vec3 UnitDirection = UnitVector(R.Direction());		 //获取单位方向向量
-	double T = 0.5 * (UnitDirection.Y() + 1.0);			 //插值量，范围[0,1]
-	return (1.0 - T) * Vec3(1.0, 1.0, 1.0) + T * Vec3(0.5, 0.7, 1.0); //返回一个颜色
+	HitRecord Rec;
+
+	if (World->Hit(R, 0.0, DBL_MAX, Rec))	 //如果能检测到这个World对象
+	{
+		//返回法线贴图
+		return 0.5 * Vec3(Rec.Normal.X() + 1, Rec.Normal.Y() + 1, Rec.Normal.Z() + 1);
+	}
+	else
+	{
+		Vec3 UnitDirection = UnitVector(R.Direction());		 //获取单位方向向量
+		double T = 0.5 * (UnitDirection.Y() + 1.0);			 //插值量，范围[0,1]
+		return (1.0 - T) * Vec3(1.0, 1.0, 1.0) + T * Vec3(0.5, 0.7, 1.0); //返回一个颜色
+	}
 }
+
 int main()
 {
 	int nx = 200;//图片宽度（单位为像素）
@@ -67,6 +85,17 @@ int main()
 	Vec3 Horizontal(4.0, 0.0, 0.0);			 //屏幕水平宽度
 	Vec3 Vertical(0.0, 2.0, 0.0);			 //屏幕垂直高度
 	Vec3 Origin(0.0, 0.0, 0.0);				 //原点（视点位置）
+
+	//保存世界中的球体
+	Hitable* List[2];
+	List[0] = new Sphere(Vec3(0, 0, -1), 0.5);
+	List[1] = new Sphere(Vec3(0, -100.5, -1), 100);
+	Hitable* World = new HitableList(List, 2);
+
+
+
+
+
 	//预览窗口相关
 	int WindowWidth;//窗口宽度
 	int WindowHeight;//窗口高度
@@ -90,20 +119,17 @@ int main()
 	{
 		for (int i = 0; i < nx; i++)//列信息
 		{
-			//注意原书上的类型为float，以后的代码中会整体采用double
-			//计算每个像素上的RGB信息
-			//因为ppm文件中RGB通道值为0-255，而上面计算出来的r,g,b范围为0-1，这里进行转换
-			//Vec3 Col(float(i) / float(nx), float(j) / float(ny), 0.2);//声明一个Col三维向量
-			
 
 			//U为当前渲染的像素再屏幕高度中的占比
 			//为0表示屏幕最上方，为1表示屏幕最下方
 			//V同理
-			float U = float(i) / float(nx);
-			float V = float(j) / float(ny);
+			double U = double(i) / double(nx);
+			double V = double(j) / double(ny);
 
 			Ray R(Origin, LowerLeftCorner + U * Horizontal + V * Vertical);//R为当前的检测射线
-			Vec3 Col = Color(R);//计算射线R检测到的颜色，结果由Color函数返回
+			//Vec3 P = R.PointAtParameter(2.0);//P为长度为2的射线R
+			Vec3 Col = Color(R, World);//计算射线R检测到的颜色，结果由Color函数返回
+			//Vec3 Col = Vec3(0,0,0);
 			//下面三个将射线检测到的颜色拆分为红、绿、蓝三个通道
 			int ir = int(255.99 * Col[0]);
 			int ig = int(255.99 * Col[1]);
@@ -117,12 +143,12 @@ int main()
 			//Sleep(0);
 		}
 		//每行计算完以后刷新预览窗口
-		if (!(j%(ny/100))) //每渲染ny/100行后更新预览窗口图片
+		if (!(j % (ny / 100))) //每渲染ny/100行后更新预览窗口图片
 		{
 			imshow("图像预览（渲染中）", RenderingImage);
 			waitKey(1);//等待1毫秒事件让窗口刷新完毕
 		}
-		
+
 	}
 	imshow("图像预览（渲染中）", RenderingImage);
 	waitKey(5000); //等待3000毫秒
