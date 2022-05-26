@@ -15,8 +15,12 @@
   *
   * 运行此项目必须的步骤：
   *       ①准备Visual Studio 2019或更高的版本，低版本可能有兼容问题
-  *       ②（已实现）在项目属性->调试->命令行调试中输入 >Image.ppm  可以将控制台程序输出到Image.ppm
-  *       ③用ppm viewer打开Image.ppm即可看到效果
+  *       ②（已实现）在项目属性->调试->命令行调试中输入 >data.ppm  可以将控制台程序输出到data.ppm
+  *       ③用ppm viewer打开data.ppm即可看到效果
+  *
+  * 压缩包包含文件：
+  *       ①项目所需文件
+  *       ②ppm viewer（ppm图片查看器）
   *
   * 参考文献《Ray Tracing in One Weekend》 Peter Shirley Version 1.54 Copyright 2018. Peter Shirley. All rights reserved
 
@@ -25,19 +29,33 @@
 
 
 #include <iostream>
+#include <windows.h>
 #include <opencv.hpp>
 #include <highgui.hpp>
 #include "Vec3.h"
+#include "Ray.h"
 
 using namespace cv;
+
+Vec3 Color(const Ray& R)
+{
+	Vec3 UnitDirection = UnitVector(R.Direction());		 //获取单位方向向量
+	double T = 0.5 * (UnitDirection.Y() + 1.0);			 //插值量，范围[0,1]
+	return (1.0 - T) * Vec3(1.0, 1.0, 1.0) + T * Vec3(0.5, 0.7, 1.0); //返回一个颜色
+}
+
 int main()
 {
 	int nx = 200;//图片宽度（单位为像素）
-	int ny = 100;//图片宽度（单位为像素）
+	int ny = 100;//图片高度（单位为像素）
 
 	//文件头写入
 	std::cout << "P3" << std::endl << nx << " " << ny << std::endl << "255" << std::endl;
 
+	Vec3 LowerLeftCorner(-2.0, -1.0, -1.0);	 //左下角坐标
+	Vec3 Horizontal(4.0, 0.0, 0.0);			 //屏幕水平宽度
+	Vec3 Vertical(0.0, 2.0, 0.0);			 //屏幕垂直高度
+	Vec3 Origin(0.0, 0.0, 0.0);				 //原点（视点位置）
 	//预览窗口相关
 	int WindowWidth;//窗口宽度
 	int WindowHeight;//窗口高度
@@ -61,17 +79,31 @@ int main()
 	{
 		for (int i = 0; i < nx; i++)//列信息
 		{
-			Vec3 Col(float(i)/float(nx),float(j)/float(ny),0.2);
+			//注意原书上的类型为float，以后的代码中会整体采用double
+			//计算每个像素上的RGB信息
+			//因为ppm文件中RGB通道值为0-255，而上面计算出来的r,g,b范围为0-1，这里进行转换
+			//Vec3 Col(float(i) / float(nx), float(j) / float(ny), 0.2);//声明一个Col三维向量
+			
+
+			//U为当前渲染的像素再屏幕高度中的占比
+			//为0表示屏幕最上方，为1表示屏幕最下方
+			//V同理
+			float U = float(i) / float(nx);
+			float V = float(j) / float(ny);
+
+			Ray R(Origin, LowerLeftCorner + U * Horizontal + V * Vertical);//R为当前的检测射线
+			Vec3 Col = Color(R);//计算射线R检测到的颜色，结果由Color函数返回
 			//下面三个将射线检测到的颜色拆分为红、绿、蓝三个通道
 			int ir = int(255.99 * Col[0]);
 			int ig = int(255.99 * Col[1]);
 			int ib = int(255.99 * Col[2]);
 			//将当前像素的三个通道值写入文件
 			std::cout << ir << " " << ig << " " << ib << std::endl;
-
+			//实时显示渲染帧
 			RenderingImage.at<cv::Vec3b>(ny - 1 - j, i)[0] = ib;
 			RenderingImage.at<cv::Vec3b>(ny - 1 - j, i)[1] = ig;
 			RenderingImage.at<cv::Vec3b>(ny - 1 - j, i)[2] = ir;
+			//Sleep(0);
 		}
 		//每行计算完以后刷新预览窗口
 		if (!(j%(ny/100))) //每渲染ny/100行后更新预览窗口图片
@@ -82,7 +114,7 @@ int main()
 		
 	}
 	imshow("图像预览（渲染中）", RenderingImage);
-	waitKey(3000); //等待3000毫秒
+	waitKey(5000); //等待3000毫秒
 	destroyAllWindows();//关闭窗口
 	return 0;
 }
