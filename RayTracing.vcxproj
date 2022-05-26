@@ -150,8 +150,10 @@
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Include\Camera.h" />
     <ClInclude Include="Include\Hitable.h" />
     <ClInclude Include="Include\HitableList.h" />
+    <ClInclude Include="Include\Random.h" />
     <ClInclude Include="Include\Ray.h" />
     <ClInclude Include="Include\Sphere.h" />
     <ClInclude Include="Include\Vec3.h" />

@@ -36,6 +36,8 @@
 #include "Ray.h"
 #include "Sphere.h"
 #include "HitableList.h"
+#include "Random.h"
+#include "Camera.h"
 
 using namespace cv;
 
@@ -77,14 +79,9 @@ int main()
 {
 	int nx = 200;//图片宽度（单位为像素）
 	int ny = 100;//图片高度（单位为像素）
-
+	int ns = 100;//扫描次数
 	//文件头写入
 	std::cout << "P3" << std::endl << nx << " " << ny << std::endl << "255" << std::endl;
-
-	Vec3 LowerLeftCorner(-2.0, -1.0, -1.0);	 //左下角坐标
-	Vec3 Horizontal(4.0, 0.0, 0.0);			 //屏幕水平宽度
-	Vec3 Vertical(0.0, 2.0, 0.0);			 //屏幕垂直高度
-	Vec3 Origin(0.0, 0.0, 0.0);				 //原点（视点位置）
 
 	//保存世界中的球体
 	Hitable* List[2];
@@ -92,9 +89,7 @@ int main()
 	List[1] = new Sphere(Vec3(0, -100.5, -1), 100);
 	Hitable* World = new HitableList(List, 2);
 
-
-
-
+	Camera Cam;//摄像机对象
 
 	//预览窗口相关
 	int WindowWidth;//窗口宽度
@@ -119,17 +114,27 @@ int main()
 	{
 		for (int i = 0; i < nx; i++)//列信息
 		{
+			Vec3 Col(0, 0, 0);//保存当前像素颜色
 
-			//U为当前渲染的像素再屏幕高度中的占比
-			//为0表示屏幕最上方，为1表示屏幕最下方
-			//V同理
-			double U = double(i) / double(nx);
-			double V = double(j) / double(ny);
+			for (int s = 0; s < ns; s++)  //循环ns次用来计算ns次
+			{
+				//获取屏幕扫描像素
+				//注意下面UV获取时加了0-1随机浮点
+				//可以获取当前像素和右下方1像素之间的随机UV
+				//因为RandDbl01只产生0-1之间的随机数
+				//所以每个像素只会跟右边1像素和下边1像素之间的像素混合颜色。
+				double U = double(i + RandDbl01()) / double(nx);
+				double V = double(j + RandDbl01()) / double(ny);
 
-			Ray R(Origin, LowerLeftCorner + U * Horizontal + V * Vertical);//R为当前的检测射线
-			//Vec3 P = R.PointAtParameter(2.0);//P为长度为2的射线R
-			Vec3 Col = Color(R, World);//计算射线R检测到的颜色，结果由Color函数返回
-			//Vec3 Col = Vec3(0,0,0);
+				//获取当前扫描射线
+				Ray R = Cam.GetRay(U, V);
+				Vec3 P = R.PointAtParameter(2.0);
+
+				//将随机UV得到的颜色相加
+				Col += Color(R, World);
+			}
+			//计算Col的平均数
+			Col /= double(ns);
 			//下面三个将射线检测到的颜色拆分为红、绿、蓝三个通道
 			int ir = int(255.99 * Col[0]);
 			int ig = int(255.99 * Col[1]);
@@ -141,6 +146,7 @@ int main()
 			RenderingImage.at<cv::Vec3b>(ny - 1 - j, i)[1] = ig;
 			RenderingImage.at<cv::Vec3b>(ny - 1 - j, i)[2] = ir;
 			//Sleep(0);
+
 		}
 		//每行计算完以后刷新预览窗口
 		if (!(j % (ny / 100))) //每渲染ny/100行后更新预览窗口图片

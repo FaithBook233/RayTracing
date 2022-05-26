@@ -39,5 +39,11 @@
     <ClInclude Include="Include\Hitable.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Include\Random.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Camera.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
